@@ -1,0 +1,40 @@
+#TABELLA PAZIENTI DATASET PRIVATO
+import pandas as pd
+import numpy as np
+import json
+import os
+import math
+from sklearn.preprocessing import MinMaxScaler
+import itertools
+import networkx as nx
+import matplotlib.pyplot as plt
+from sklearn.cluster import SpectralClustering
+from sklearn.metrics import silhouette_score
+from sklearn.cluster import KMeans
+# Dati dei pazienti
+data_1 = {
+    "Type of Diabetes": [1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    "Age": [24, 40, 26, 32, 70, 69, 47, 40, 32, 27, 46, 46, 45, 58, 40, 51, 28, 24, 62, 46],
+    "Duration (years)": [13, 34, 20, 30, 16, 1, 7, 10, 8, 23, 32, 17, 4, 16, 15, 39, 23, 6, 40, 28],
+    "Gender": ["F", "M", "F", "M", "M", "M", "M", "M", "F", "F", "M", "F", "F", "F", "F", "F", "F", "F", "M", "M"]
+}
+
+data_2 = {
+    "C-peptide [ng/ml]": ["< 0.01", "< 0.01", "< 0.01", "< 0.01", "0.04", "< 0.01", "0.09", "0.01", "< 0.01", "< 0.01",
+                          "< 0.01", "0.05", "0.05", "0.04", "< 0.01", "< 0.01", "< 0.01", "0.03", "< 0.01", "0.10"],
+    "HbA1c [%]": [6.8, 5.7, 7.8, 5.7, 6.5, 7.6, 6.5, 7.1, 7.7, 10, 7.5, 8.1, 7, 7.2, 8.1, 6.5, 8.6, 7.5, 7.7, 8.3],
+    "Basal insulin [U/day]": [17.7, 25.9, 24.75, 15.3, 38.5, 13.2, 10.8, 24, 15.5, 18.9, 15.6, 15.1, 28.8, 24.6, 12.3,
+                              17.4, 22.4, 22.5, 60, 37.3],
+    "Pathologies or related complications": ["−", "Retinopathy, hypothyroidism", "PCOS", "−", "−", "Dyslipidemia, thyroiditis",
+                                             "Dyslipidemia, celiac", "Dyslipidemia, glaucoma", "Hypothyroidism", "Thyroiditis",
+                                             "Hypercholesterolemia", "LES, Sjorgen, retinopathy", "Basedow’s disease", "−", "−",
+                                             "Peripheral neuropathy", "Thyroiditis, pityriasis rosea", "−", "−", "−"]
+}
+
+# Conversione in DataFrame
+df_1 = pd.DataFrame(data_1)
+df_2 = pd.DataFrame(data_2)
+
+# Unione delle tabelle
+full_df = pd.concat([df_1, df_2], axis=1)
+full_df
