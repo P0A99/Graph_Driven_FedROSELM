@@ -3,10 +3,7 @@
 ####################################
 
 import os
-import sys
-import joblib
 import numpy as np
-import xml.etree.ElementTree as ET
 import pandas as pd
 from utils_dataset import dataset_funcs as df
 from utils_dataset.dataset_access import save_data_as_npy
@@ -16,21 +13,12 @@ import matplotlib.pyplot as plt
 from pyoselm_master.pyoselm.regul_oselm import OSELMRegressor
 from Clarke_Error_Grid import clarke_error_grid
 import random
-import math
-from sklearn.metrics import matthews_corrcoef
 
 plt.rcParams.update({'font.size': 14})
 plt.style.use('seaborn-darkgrid')
 
 #GET PAZs PATH
 def load_datasets():
-    """
-    Loads the datasets from the 'ohio_datasets' folder.
-
-    Returns:
-        paz_list_train (list): List of file paths for training datasets.
-        paz_list_test (list): List of file paths for testing datasets.
-    """
     # Get the current folder path
     current_folder = os.path.dirname(__file__)
 
@@ -57,8 +45,6 @@ def load_datasets():
             paz_list_test.append(path)
 
     return paz_list_train, paz_list_test,current_folder
-        
-#print(paz_list) #paz_list è una lista dei path di tutti i pazienti
 
 
 ########################      ACCESS TO DATASET     #################
@@ -69,8 +55,9 @@ current_folder = os.path.dirname(__file__)
 
 ########################      LOADING DATA     ######################
 
-
-test = []
+#test = []
+test1 = []
+test2 = []
 Dataset = np.load('glucose_level.npy')
 Dataset_te = np.load('glucose_level_test.npy')
 Dataset = df.Dataset_mat(Dataset)
@@ -91,6 +78,7 @@ models = [[[],[],[]], [[],[],[]]]
 
 plot_data = False
 # Iterate over each client in the dataset
+paz_i = 0
 for client in range(np.load('glucose_level.npy').shape[0]):
     # Get the training data for the current client
     X_tr, y_tr, max_it_tr, min_it_tr = Dataset.dataset_to_train(paz=client, PH=PH, train_seq=5, train_freq=SW_step)
@@ -106,7 +94,11 @@ for client in range(np.load('glucose_level.npy').shape[0]):
     clientsOG.append(client_data)
     clients_ipo.append(client_data_ipo)
     clients_iper.append(client_data_iper)
-    test.append([X_te, y_te])
+    if paz_i==0 or paz_i==1 or paz_i==2 or paz_i==4 or paz_i==5 or paz_i==8 or paz_i==11 :
+        test1.append([X_te, y_te])
+    else:
+        test2.append([X_te, y_te])
+    paz_i += 1
 triple_clients_data = [clientsOG, clients_ipo, clients_iper] 
 
 
@@ -240,63 +232,26 @@ for cluster_idx, Cluster in enumerate(Clusters):
             # Crea il percorso completo del file in cui salvare il modello
             model_path = os.path.join(complexity_folder, 'OS-ELM.joblib')
 
-
-            metric_round_online = []
-            # Testing on next training chunk
-            for idx,client in enumerate(clientsOG):
-                metric_client_online,y_online_temp,t_online = test_metrics(models[cluster_idx],input=client[0][Round+1],target=client[1][Round+1],max=max_tr,min=min_tr,metric_used='triple_RMSE')
-                metric_round_online.append(np.mean(metric_client_online))    
-            metric_online.append(sum(metric_round_online)/len(metric_round_online))
-            clients_metrics_online_std.append(np.std(metric_round_online))
-            
-            if Cluster == Cluster1:
-                metric_round_online_cluster = []
-                # Testing on next training chunk
-                for idx,client in enumerate(Cluster):
-                    client = client[0]
-                    metric_client_online,y_online_temp,t_online = test_metrics(models[cluster_idx],input=client[0][Round+1],target=client[1][Round+1],max=max_tr,min=min_tr,metric_used='triple_RMSE')
-                    metric_round_online_cluster.append(np.mean(metric_client_online))    
-                metric_online_cluster1.append(sum(metric_round_online)/len(metric_round_online))
-                clients_metrics_online_std_cluster1.append(np.std(metric_round_online))
-            else:
-                metric_round_online_cluster = []
-                # Testing on next training chunk
-                for idx,client in enumerate(Cluster):
-                    client = client[0]
-                    metric_client_online,y_online_temp,t_online = test_metrics(models[cluster_idx],input=client[0][Round+1],target=client[1][Round+1],max=max_tr,min=min_tr,metric_used='triple_RMSE')
-                    metric_round_online_cluster.append(np.mean(metric_client_online))    
-                metric_online_cluster2.append(sum(metric_round_online)/len(metric_round_online))
-                clients_metrics_online_std_cluster2.append(np.std(metric_round_online))
-
-            metric_round = []
-            # Testing on the entire test-set
-            for idx,client in enumerate(clientsOG):
-                metric_client,y,t = test_metrics(models[cluster_idx],input=client[0][Round+1],target=client[1][Round+1],max=max_tr,min=min_tr,metric_used='triple_RMSE')
-                metric_round.append(np.mean(metric_client))
-                client_metrics[idx].append(np.mean(metric_client))
-            metric.append(sum(metric_round)/len(metric_round))
-            clients_metrics_std.append(np.std(metric_round))
-
             if Cluster == Cluster1:
                 metric_round_cluster = []
                 # Testing on the entire test-set
                 for idx,client in enumerate(Cluster):
                     client = client[0]
-                    metric_client,y,t = test_metrics(models[cluster_idx],input=client[0][Round+1],target=client[1][Round+1],max=max_tr,min=min_tr,metric_used='triple_RMSE')
+                    metric_client,y,t = test_metrics(models[cluster_idx],input=test1[idx][0],target=test1[idx][0],max=max_tr,min=min_tr,metric_used='triple_RMSE')
                     metric_round_cluster.append(np.mean(metric_client))
                     client_metrics_cluster1[idx].append(np.mean(metric_client))
-                metric_cluster1.append(sum(metric_round)/len(metric_round))
-                clients_metrics_std_cluster1.append(np.std(metric_round))
+                metric_cluster1.append(sum(metric_round_cluster)/len(metric_round_cluster))
+                clients_metrics_std_cluster1.append(np.std(metric_round_cluster))
             else:
                 metric_round_cluster = []
                 # Testing on the entire test-set
                 for idx,client in enumerate(Cluster):
                     client = client[0]
-                    metric_client,y,t = test_metrics(models[cluster_idx],input=client[0][Round+1],target=client[1][Round+1],max=max_tr,min=min_tr,metric_used='triple_RMSE')
+                    metric_client,y,t = test_metrics(models[cluster_idx],input=test2[idx][0],target=test2[idx][0],max=max_tr,min=min_tr,metric_used='triple_RMSE')
                     metric_round_cluster.append(np.mean(metric_client))
                     client_metrics_cluster2[idx].append(np.mean(metric_client))
-                metric_cluster2.append(sum(metric_round)/len(metric_round))
-                clients_metrics_std_cluster2.append(np.std(metric_round))
+                metric_cluster2.append(sum(metric_round_cluster)/len(metric_round_cluster))
+                clients_metrics_std_cluster2.append(np.std(metric_round_cluster))
 ################################################################
 
 ########################      SAVES     ########################
@@ -332,26 +287,20 @@ if saves:
 ################################################################
 
 ########################      PLOTS     ########################
-for ix in range(2):
-    for idx,client in enumerate(clientsOG):
-        metric_client,y,t = test_metrics(models[ix],input=client[0][Round+1],target=client[1][Round+1],max=max_tr,min=min_tr,metric_used='triple_RMSE')
-        metric_round.append(np.mean(metric_client))
-        for n,el in enumerate(y):
-            online_ys.append(el)
-        for m,elem in enumerate(t):
-            online_ts.append(elem)
-
+metric_round = []
+for idx,client in enumerate(Cluster1):
+    metric_client,y,t = test_metrics(models[0],input=test1[idx][0],target=test1[idx][0],max=max_tr,min=min_tr,metric_used='triple_RMSE')
+    metric_round.append(np.mean(metric_client))
+    for n,el in enumerate(y):
+        online_ys.append(el)
+    for m,elem in enumerate(t):
+        online_ts.append(elem)
 combined = list(zip(online_ys, online_ts))
-
-# Step 2: Ordina le coppie in base agli elementi del primo array
 combined_sorted = sorted(combined, key=lambda x: x[1])
-
-# Step 3: Dividi i risultati ordinati in due array
 array1_sorted, array2_sorted = zip(*combined_sorted)
-
 error = abs(np.array(sorted(array1_sorted)) - np.array(sorted(array2_sorted)))
 error_percent = np.zeros((error.shape[0],1))
-sorted_ts = sorted(online_ys)
+sorted_ts = sorted(online_ts)
 for i in range(error.shape[0]):
     error_percent[i] = (error[i]/array2_sorted[i])*100
 '''plt.figure(figsize=(6,6))
@@ -359,12 +308,73 @@ plt.plot(np.array(sorted(online_ts)),error,color='r',linewidth=0.4)
 plt.xlabel('BGL Value [mg/dL]')
 plt.ylabel('Prediction Error [mg/dL]')
 plt.show()'''
+'''step = 100
+gruppi = [error_percent[i:i + step] for i in range(0, len(error_percent) - len(error_percent) % step, step)]
+gruppi = [np.squeeze(gruppo) for gruppo in gruppi]
+positions = sorted_ts[::step]'''
 
+# Assicurati che il numero di posizioni sia uguale al numero di gruppi
+#positions = positions[:len(gruppi)]  # Trunca se necessario
+plt.style.use('default')
 plt.figure(figsize=(6,6))
 plt.grid(True)
-plt.plot(np.array(sorted(online_ts))[20:-40],error_percent[20:-40],color='r',linewidth=0.8)
+plt.plot(np.array(sorted(online_ts[20:-20])),error_percent[20:-20],color='r',linewidth=0.8)
+#plt.boxplot(gruppi, positions=[round(pos) for pos in positions], widths=0.7)
 plt.xlabel('BGL Refernce Value [mg/dL]')
 plt.ylabel('Prediction Error [%]')
+plt.title('Model Cluster 1')
+plt.show()
+
+intervallo_idx = (np.array(sorted_ts)>90) & (np.array(sorted_ts)<250)
+intervallo = np.mean(error_percent[intervallo_idx])
+print("L'errore percentuale medio commesso tra 90 e 250 mg/dL è: " + str(intervallo))
+
+plt.style.use('default')
+# PLOT CLARKE ERROR GRID
+plt, zone = clarke_error_grid(online_ts, online_ys, '')
+plt.title('CEG cluster1')
+plt.show()
+
+online_ts = []
+online_ys = []
+metric_round = []
+for idx,client in enumerate(Cluster2):
+    metric_client,y,t = test_metrics(models[1],input=test2[idx][0],target=test2[idx][0],max=max_tr,min=min_tr,metric_used='triple_RMSE')
+    metric_round.append(np.mean(metric_client))
+    for n,el in enumerate(y):
+        online_ys.append(el)
+    for m,elem in enumerate(t):
+        online_ts.append(elem)
+combined = list(zip(online_ys, online_ts))
+combined_sorted = sorted(combined, key=lambda x: x[1])
+array1_sorted, array2_sorted = zip(*combined_sorted)
+error = abs(np.array(sorted(array1_sorted)) - np.array(sorted(array2_sorted)))
+error_percent = np.zeros((error.shape[0],1))
+sorted_ts = sorted(online_ts)
+for i in range(error.shape[0]):
+    error_percent[i] = (error[i]/array2_sorted[i])*100
+'''plt.figure(figsize=(6,6))
+plt.plot(np.array(sorted(online_ts)),error,color='r',linewidth=0.4)
+plt.xlabel('BGL Value [mg/dL]')
+plt.ylabel('Prediction Error [mg/dL]')
+plt.show()'''
+plt.style.use('default')
+plt.figure(figsize=(6,6))
+plt.grid(True)
+plt.plot(np.array(sorted(online_ts[20:-20])),error_percent[20:-20],color='r',linewidth=0.8)
+plt.xlabel('BGL Refernce Value [mg/dL]')
+plt.ylabel('Prediction Error [%]')
+plt.title('Model Cluster 2')
+plt.show()
+
+intervallo_idx = (np.array(sorted_ts)>90) & (np.array(sorted_ts)<250)
+intervallo = np.mean(error_percent[intervallo_idx])
+print("L'errore percentuale medio commesso tra 90 e 250 mg/dL è: " + str(intervallo))
+
+plt.style.use('default')
+# PLOT CLARKE ERROR GRID
+plt, zone = clarke_error_grid(online_ts, online_ys, '')
+plt.title('CEG cluster2')
 plt.show()
 
 '''
@@ -374,58 +384,6 @@ plt.plot(np.array(sorted(online_ts))[20:-40],error_percent[20:-40],color='r',lin
 plt.xlabel('BGL Refernce Value [mg/dL]')
 plt.ylabel('Prediction Error [%]')
 plt.show()'''
-
-'''
-difficulty_M_hard = []
-for idx in range(len(y_single)):
-    if y_single[idx]>200 or y_single[idx]<70:
-        difficulty_M_hard.append(1)
-    else:
-        difficulty_M_hard.append(0)
-plt.figure(figsize=(6,6))
-plt.plot(performance_list,color='b')
-#plt.plot(y_single,color='r')
-plt.show()
-
-plt.figure(figsize=(6,6))
-plt.plot(difficulty_M_hard,color='b')
-#plt.plot(y_single,color='r')
-plt.show()
-
-
-# Set the location of each subplot
-loc = [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2],[3,0],[3,1],[3,2]]
-# PLOT CONFRONTO TRA TARGET E PRED DI OGNI CLIENT
-# Create a figure with subplots
-fig, axes = plt.subplots(4, 3, figsize=(10, 6))
-for idx, client in enumerate(clients):
-    # Prediction for plot
-    out = denormalize(model.predict(test[idx][0]),client[5],client[7])
-    target = denormalize(test[idx][1],client[5],client[7])
-    samples = np.arange(0, int(np.array(out[int(np.round(0.3*out.shape[0])):int(np.round(0.7*out.shape[0]))]).shape[0])) * 5
-    row = loc[idx][0]
-    col = loc[idx][1]
-    ax = axes[row, col]
-    # Plot the prediction and target
-    ax.plot(samples, out[int(np.round(0.3*out.shape[0])):int(np.round(0.7*out.shape[0]))], color='red', label='pred', linewidth=0.4)
-    ax.plot(samples, target[int(np.round(0.3*out.shape[0])):int(np.round(0.7*out.shape[0]))], color='blue', label='target', linewidth=0.4)
-    ax.set_ylabel('RMSE [mg/dL]')
-    ax.set_xlabel('minutes')
-plt.legend()
-plt.tight_layout()
-plt.title('Comparison Real BGL (target) vs Predicted BGL (Pred)')
-if saves:
-    plt.savefig(os.path.join(results_folder, 'Target_vs_Pred'))
-plt.show()'''
-
-#PLOT SINGOLO TRACCIATO BGL
-paz = 6
-bgl = denormalize(test[paz][1],clients[paz][5],clients[paz][7])
-samples = np.arange(0, 100)
-plt.figure(figsize=(20,6))
-plt.grid(True)
-plt.plot(samples,bgl[100:200], color='red', linewidth=3)
-plt.show()
 
 '''
 fig, axes = plt.subplots(4, 3, figsize=(12, 8))
@@ -442,31 +400,25 @@ if saves:
 plt.title('CEG')
 plt.show()'''
 
-# PLOT RMSE CON TEST ONLINE E SU TUTTO IL TEST-SET
-plt.figure(figsize=(6, 6))
-plt.plot(metric, color='red', label='test on test set', linewidth=0.6)
-plt.fill_between(range(2*N_rounds), np.array(metric) - np.array(clients_metrics_std), np.array(metric) + np.array(clients_metrics_std), color='red', alpha=0.2)
-plt.xlabel('Rounds')
-plt.ylabel('RMSE [mg/dL]')
-plt.title('All')
-plt.legend()
-plt.show()
-
+plt.style.use('default')
 plt.figure(figsize=(6, 6))
 plt.plot(metric_cluster1, color='red', label='test on test set', linewidth=0.6)
 plt.fill_between(range(N_rounds), np.array(metric_cluster1) - np.array(clients_metrics_std_cluster1), np.array(metric_cluster1) + np.array(clients_metrics_std_cluster1), color='red', alpha=0.2)
 plt.xlabel('Rounds')
 plt.ylabel('RMSE [mg/dL]')
 plt.title('Cluster1')
+plt.grid(True)
 plt.legend()
 plt.show()
 
+plt.style.use('default')
 plt.figure(figsize=(6, 6))
 plt.plot(metric_cluster2, color='red', label='test on test set', linewidth=0.6)
 plt.fill_between(range(N_rounds), np.array(metric_cluster2) - np.array(clients_metrics_std_cluster2), np.array(metric_cluster2) + np.array(clients_metrics_std_cluster2), color='red', alpha=0.2)
 plt.xlabel('Rounds')
 plt.ylabel('RMSE [mg/dL]')
 plt.title('Cluster2')
+plt.grid(True)
 plt.legend()
 plt.show()
 '''#PLOT DEI TEMPI DI ADDESTRAMENTO PER OGNI BATCH PER TUTTI I CLIENTS   
@@ -479,19 +431,4 @@ plt.title('Training time of all consecutive clients for single batch')
 plt.legend()
 if saves:
     plt.savefig(os.path.join(results_folder, 'Train Time'))
-plt.show()'''
-
-'''plt.style.use('default')
-# PLOT CLARKE ERROR GRID
-zone = np.zeros((len(clients),5))
-for idx, client in enumerate(clients):
-    out = model.predict(test[idx][0])
-    out = denormalize(out,client[5],client[7])
-    target = denormalize(test[idx][1],client[5],client[7])
-    # Generate Clarke Error Grid and save zone percentages
-    plt, zone[idx] = clarke_error_grid(online_ts, online_ys, '')
-    zone[idx] = [(elemento / sum(zone[idx])) * 100 for elemento in zone[idx]]
-    if saves:
-        np.savetxt(os.path.join(results_folder, f"zone_client_{idx}.txt"), zone)
-plt.title('CEG')
 plt.show()'''

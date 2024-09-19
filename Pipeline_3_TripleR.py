@@ -292,18 +292,12 @@ for idx,client in enumerate(clientsOG):
         online_ys.append(el)
     for m,elem in enumerate(t):
         online_ts.append(elem)
-
 combined = list(zip(online_ys, online_ts))
-
-# Step 2: Ordina le coppie in base agli elementi del primo array
 combined_sorted = sorted(combined, key=lambda x: x[1])
-
-# Step 3: Dividi i risultati ordinati in due array
 array1_sorted, array2_sorted = zip(*combined_sorted)
-
 error = abs(np.array(sorted(array1_sorted)) - np.array(sorted(array2_sorted)))
 error_percent = np.zeros((error.shape[0],1))
-sorted_ts = sorted(online_ys)
+sorted_ts = sorted(online_ts)
 for i in range(error.shape[0]):
     error_percent[i] = (error[i]/array2_sorted[i])*100
 '''plt.figure(figsize=(6,6))
@@ -311,13 +305,17 @@ plt.plot(np.array(sorted(online_ts)),error,color='r',linewidth=0.4)
 plt.xlabel('BGL Value [mg/dL]')
 plt.ylabel('Prediction Error [mg/dL]')
 plt.show()'''
-
+plt.style.use('default')
 plt.figure(figsize=(6,6))
 plt.grid(True)
-plt.plot(np.array(sorted(online_ts))[20:-40],error_percent[20:-40],color='r',linewidth=0.8)
+plt.plot(np.array(sorted(online_ts[20:-20])),error_percent[20:-20],color='r',linewidth=0.8)
 plt.xlabel('BGL Refernce Value [mg/dL]')
 plt.ylabel('Prediction Error [%]')
 plt.show()
+
+intervallo_idx = (np.array(sorted_ts)>90) & (np.array(sorted_ts)<250)
+intervallo = np.mean(error_percent[intervallo_idx])
+print("L'errore percentuale medio commesso tra 90 e 250 mg/dL è: " + str(intervallo))
 
 '''
 difficulty_M_hard = []
@@ -363,13 +361,13 @@ if saves:
 plt.show()'''
 
 #PLOT SINGOLO TRACCIATO BGL
-paz = 6
+'''paz = 6
 bgl = denormalize(test[paz][1],clients[paz][5],clients[paz][7])
 samples = np.arange(0, 100)
 plt.figure(figsize=(20,6))
 plt.grid(True)
 plt.plot(samples,bgl[100:200], color='red', linewidth=3)
-plt.show()
+plt.show()'''
 
 '''
 fig, axes = plt.subplots(4, 3, figsize=(12, 8))
@@ -387,6 +385,7 @@ plt.title('CEG')
 plt.show()'''
 
 # PLOT RMSE CON TEST ONLINE E SU TUTTO IL TEST-SET
+plt.style.use('default')
 plt.figure(figsize=(6, 6))
 plt.plot(metric[3:], color='red', label='test on test set', linewidth=0.6)
 plt.fill_between(range(N_rounds)[3:], np.array(metric[3:]) - np.array(clients_metrics_std[3:]), np.array(metric[3:]) + np.array(clients_metrics_std[3:]), color='red', alpha=0.2)
@@ -394,6 +393,7 @@ plt.fill_between(range(N_rounds)[3:], np.array(metric[3:]) - np.array(clients_me
 plt.fill_between(range(N_rounds), np.array(metric_online[idx]) - np.array(clients_metrics_online_std[idx]), np.array(metric_online[idx]) + np.array(clients_metrics_online_std[idx]), color='blue', alpha=0.2)'''
 plt.xlabel('Rounds')
 plt.ylabel('RMSE [mg/dL]')
+plt.grid(True)
 plt.legend()
 plt.show()
 
@@ -409,17 +409,8 @@ if saves:
     plt.savefig(os.path.join(results_folder, 'Train Time'))
 plt.show()'''
 
-'''plt.style.use('default')
+plt.style.use('default')
 # PLOT CLARKE ERROR GRID
-zone = np.zeros((len(clients),5))
-for idx, client in enumerate(clients):
-    out = model.predict(test[idx][0])
-    out = denormalize(out,client[5],client[7])
-    target = denormalize(test[idx][1],client[5],client[7])
-    # Generate Clarke Error Grid and save zone percentages
-    plt, zone[idx] = clarke_error_grid(online_ts, online_ys, '')
-    zone[idx] = [(elemento / sum(zone[idx])) * 100 for elemento in zone[idx]]
-    if saves:
-        np.savetxt(os.path.join(results_folder, f"zone_client_{idx}.txt"), zone)
+plt, zone = clarke_error_grid(online_ts, online_ys, '')
 plt.title('CEG')
-plt.show()'''
+plt.show()
