@@ -274,8 +274,6 @@ for cluster_idx,Cluster in enumerate(Clusters):
 ################################################################
 
 ########################      SAVES     ########################
-df_tutti = pd.DataFrame(client_metrics)
-df_tutti.to_excel('Tutti.xlsx', index=False)
 
 df_cluster1 = pd.DataFrame(client_metrics_cluster1)
 df_cluster1.to_excel('Cluster1.xlsx', index=False)
