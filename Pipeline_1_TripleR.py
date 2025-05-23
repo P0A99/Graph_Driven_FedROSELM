@@ -19,26 +19,23 @@ plt.style.use('seaborn-darkgrid')
 
 #GET PAZs PATH
 def load_datasets():
-    # Get the current folder path
+    """
+    Loads the datasets from the 'ohio_datasets' folder.
+
+    Returns:
+        paz_list_train (list): List of file paths for training datasets.
+        paz_list_test (list): List of file paths for testing datasets.
+    """
     current_folder = os.path.dirname(__file__)
-
-    # Join the current folder path with 'ohio_datasets' folder
     datasets_folder = os.path.join(current_folder, 'ohio_datasets')
-
-    # Join the datasets folder path with 'Train' and 'Test' folders
     datasets_train_folder = os.path.join(datasets_folder, 'Train')
     datasets_test_folder = os.path.join(datasets_folder, 'Test')
-
     paz_list_train = []
     paz_list_test = []
-
-    # Iterate over the files in the 'Train' folder and append the file paths to paz_list_train
     for paz_name in os.listdir(datasets_train_folder):
         path = os.path.join(datasets_train_folder, paz_name)
         if os.path.isfile(path):
             paz_list_train.append(path)
-
-    # Iterate over the files in the 'Test' folder and append the file paths to paz_list_test
     for paz_name in os.listdir(datasets_test_folder):
         path = os.path.join(datasets_test_folder, paz_name)
         if os.path.isfile(path):
@@ -47,13 +44,16 @@ def load_datasets():
     return paz_list_train, paz_list_test,current_folder
 
 
-########################      ACCESS TO DATASET     #################
+########################      
+# ACCESS TO DATASET     
+########################
 paz_list_train, paz_list_test, current_folder = load_datasets()
 save_data_as_npy(current_folder,paz_list_train,paz_list_test) 
 current_folder = os.path.dirname(__file__)
-#####################################################################
 
-########################      LOADING DATA     ######################
+#######################
+# LOADING DATA     
+#######################
 
 #test = []
 test1 = []
@@ -101,10 +101,6 @@ for client in range(np.load('glucose_level.npy').shape[0]):
     paz_i += 1
 triple_clients_data = [clientsOG, clients_ipo, clients_iper] 
 
-
-##########################################################################
-
-########################      MODEL TRAIN     ############################
 # ELM Params:
 activ_func = 'relu'
 rs_list = [random.randint(0,200) for i in range(1)]
@@ -173,13 +169,9 @@ for cluster_idx, Cluster in enumerate(Clusters):
                 max_te = max_te / len(clients)
                 min_te = min_te / len(clients)
 
-                ##########################################################################
-
-                ########################      MODEL TRAIN     ############################
-                '''N_possible_rounds = []
-                for idx,client in enumerate(clients):
-                    N_possible_rounds.append(len(client[0]))
-                N_rounds = np.min(np.array(N_possible_rounds))-1'''
+                ########################
+                # MODEL TRAIN     
+                # ######################
 
                 # Initialize metrics and parameters
                 Client_performance = True
@@ -252,15 +244,21 @@ for cluster_idx, Cluster in enumerate(Clusters):
                     client_metrics_cluster2[idx].append(np.mean(metric_client))
                 metric_cluster2.append(sum(metric_round_cluster)/len(metric_round_cluster))
                 clients_metrics_std_cluster2.append(np.std(metric_round_cluster))
-################################################################
-
-########################      SAVES     ########################
+########################      
+# METRICS SAVES  
+# ######################
 
 df_cluster1 = pd.DataFrame(client_metrics_cluster1)
 df_cluster1.to_excel('Cluster1.xlsx', index=False)
 
+df_cluster1 = pd.DataFrame(clients_metrics_std_cluster1)
+df_cluster1.to_excel('Cluster1_std.xlsx', index=False)
+
 df_cluster2 = pd.DataFrame(client_metrics_cluster2)
 df_cluster2.to_excel('Cluster2.xlsx', index=False)
+
+df_cluster2 = pd.DataFrame(clients_metrics_std_cluster2)
+df_cluster2.to_excel('Cluster2_std.xlsx', index=False)
 
 results_folder = os.path.join(current_folder,'Risultati')
 results_folder = os.path.join(results_folder,'Framework 1 v2')
@@ -282,9 +280,9 @@ if saves:
     np.save(os.path.join(results_folder, "RMSExClientOnline.npy"),metric_round_online)
     np.save(os.path.join(results_folder, "RMSExClient.npy"),metric_round)
 
-################################################################
-
-########################      PLOTS     ########################
+########################      
+# PLOTS     
+# ######################
 metric_round = []
 for idx,client in enumerate(Cluster1):
     metric_client,y,t = test_metrics(models[0],input=test1[idx][0],target=test1[idx][0],max=max_tr,min=min_tr,metric_used='triple_RMSE')
@@ -301,18 +299,6 @@ error_percent = np.zeros((error.shape[0],1))
 sorted_ts = sorted(online_ts)
 for i in range(error.shape[0]):
     error_percent[i] = (error[i]/array2_sorted[i])*100
-'''plt.figure(figsize=(6,6))
-plt.plot(np.array(sorted(online_ts)),error,color='r',linewidth=0.4)
-plt.xlabel('BGL Value [mg/dL]')
-plt.ylabel('Prediction Error [mg/dL]')
-plt.show()'''
-'''step = 100
-gruppi = [error_percent[i:i + step] for i in range(0, len(error_percent) - len(error_percent) % step, step)]
-gruppi = [np.squeeze(gruppo) for gruppo in gruppi]
-positions = sorted_ts[::step]'''
-
-# Assicurati che il numero di posizioni sia uguale al numero di gruppi
-#positions = positions[:len(gruppi)]  # Trunca se necessario
 plt.style.use('default')
 plt.figure(figsize=(6,6))
 plt.grid(True)
@@ -320,7 +306,34 @@ plt.plot(np.array(sorted(online_ts[20:-20])),error_percent[20:-20],color='r',lin
 #plt.boxplot(gruppi, positions=[round(pos) for pos in positions], widths=0.7)
 plt.xlabel('BGL Refernce Value [mg/dL]')
 plt.ylabel('Prediction Error [%]')
-plt.title('Model Cluster 1')
+plt.title('Pipeline 1, Ohio Dataset')
+plt.show()
+
+plt.style.use('default')
+plt.figure(figsize=(6,6))
+plt.grid(True)
+ipo_mask = (np.array(sorted(online_ts[20:-20])) <= 100)
+eug_mask = (np.array(sorted(online_ts[20:-20])) > 100) & (np.array(sorted(online_ts[20:-20])) <= 200)
+iper_mask = (np.array(sorted(online_ts[20:-20])) > 200)
+ipo_mean = np.mean(error_percent[20:-20][ipo_mask])
+eug_mean = np.mean(error_percent[20:-20][eug_mask])
+iper_mean = np.mean(error_percent[20:-20][iper_mask])
+fig, ax = plt.subplots(figsize=(6,6))
+ax.plot(np.array(sorted(online_ts[20:-20])), error_percent[20:-20], color='r', linewidth=0.8)
+ax.set_xlabel('BGL Reference Value [mg/dL]')
+ax.set_ylabel('Prediction Error [%]')
+plt.title('Pipeline 1, Ohio Dataset')
+ax.axvspan(40, 100, color='#cce5ff', alpha=0.4 )#label='Hypoglycemia'
+ax.axvspan(100, 200, color='#d4edda', alpha=0.4)#, label='Euglycemia'
+ax.axvspan(200, 400, color='#f8d7da', alpha=0.4)#, label='Hyperglycemia'
+#ax.axvline(x=100, color='blue', linestyle='--', label='Hypoglycemia/Euglycemia Boundary')
+#ax.axvline(x=200, color='green', linestyle='--', label='Euglycemia/Hyperglycemia Boundary')
+ax.hlines(ipo_mean, 40, 100, color='blue', linestyle='-', linewidth=1.5, label=f'Average Hypoglycemia Value: {ipo_mean:.2f}%')
+ax.hlines(eug_mean, 100, 200, color='green', linestyle='-', linewidth=1.5, label=f'Average Euglycemia Value: {eug_mean:.2f}%')
+ax.hlines(iper_mean, 200, 400, color='red', linestyle='-', linewidth=1.5, label=f'Average Hyperglycemia Value: {iper_mean:.2f}%')
+
+ax.grid(True)
+ax.legend()
 plt.show()
 
 intervallo_idx = (np.array(sorted_ts)>90) & (np.array(sorted_ts)<250)
@@ -328,10 +341,16 @@ intervallo = np.mean(error_percent[intervallo_idx])
 print("L'errore percentuale medio commesso tra 90 e 250 mg/dL è: " + str(intervallo))
 
 plt.style.use('default')
-# PLOT CLARKE ERROR GRID
 plt, zone = clarke_error_grid(online_ts, online_ys, '')
-plt.title('CEG cluster1')
+plt.title('Pipeline 1, Ohio Dataset')
 plt.show()
+
+zone_percent = []
+for zona in zone:
+    zona = (zona*100)/sum(zone)
+    zone_percent.append(zona)
+df = pd.DataFrame(zone_percent)
+df.to_excel('CEG_prcent_cluster1.xlsx', index=False)
 
 online_ts = []
 online_ys = []
@@ -351,18 +370,40 @@ error_percent = np.zeros((error.shape[0],1))
 sorted_ts = sorted(online_ts)
 for i in range(error.shape[0]):
     error_percent[i] = (error[i]/array2_sorted[i])*100
-'''plt.figure(figsize=(6,6))
-plt.plot(np.array(sorted(online_ts)),error,color='r',linewidth=0.4)
-plt.xlabel('BGL Value [mg/dL]')
-plt.ylabel('Prediction Error [mg/dL]')
-plt.show()'''
 plt.style.use('default')
 plt.figure(figsize=(6,6))
 plt.grid(True)
 plt.plot(np.array(sorted(online_ts[20:-20])),error_percent[20:-20],color='r',linewidth=0.8)
 plt.xlabel('BGL Refernce Value [mg/dL]')
 plt.ylabel('Prediction Error [%]')
-plt.title('Model Cluster 2')
+plt.title('Pipeline 1, Ohio Dataset')
+plt.show()
+
+plt.style.use('default')
+plt.figure(figsize=(6,6))
+plt.grid(True)
+ipo_mask = (np.array(sorted(online_ts[20:-20])) <= 100)
+eug_mask = (np.array(sorted(online_ts[20:-20])) > 100) & (np.array(sorted(online_ts[20:-20])) <= 200)
+iper_mask = (np.array(sorted(online_ts[20:-20])) > 200)
+ipo_mean = np.mean(error_percent[20:-20][ipo_mask])
+eug_mean = np.mean(error_percent[20:-20][eug_mask])
+iper_mean = np.mean(error_percent[20:-20][iper_mask])
+fig, ax = plt.subplots(figsize=(6,6))
+ax.plot(np.array(sorted(online_ts[20:-20])), error_percent[20:-20], color='r', linewidth=0.8)
+ax.set_xlabel('BGL Reference Value [mg/dL]')
+ax.set_ylabel('Prediction Error [%]')
+plt.title('Pipeline 1, Ohio Dataset')
+ax.axvspan(40, 100, color='#cce5ff', alpha=0.4 )#label='Hypoglycemia'
+ax.axvspan(100, 200, color='#d4edda', alpha=0.4)#, label='Euglycemia'
+ax.axvspan(200, 400, color='#f8d7da', alpha=0.4)#, label='Hyperglycemia'
+#ax.axvline(x=100, color='blue', linestyle='--', label='Hypoglycemia/Euglycemia Boundary')
+#ax.axvline(x=200, color='green', linestyle='--', label='Euglycemia/Hyperglycemia Boundary')
+ax.hlines(ipo_mean, 40, 100, color='blue', linestyle='-', linewidth=1.5, label=f'Average Hypoglycemia Value: {ipo_mean:.2f}%')
+ax.hlines(eug_mean, 100, 200, color='green', linestyle='-', linewidth=1.5, label=f'Average Euglycemia Value: {eug_mean:.2f}%')
+ax.hlines(iper_mean, 200, 400, color='red', linestyle='-', linewidth=1.5, label=f'Average Hyperglycemia Value: {iper_mean:.2f}%')
+
+ax.grid(True)
+ax.legend()
 plt.show()
 
 intervallo_idx = (np.array(sorted_ts)>90) & (np.array(sorted_ts)<250)
@@ -372,31 +413,15 @@ print("L'errore percentuale medio commesso tra 90 e 250 mg/dL è: " + str(interv
 plt.style.use('default')
 # PLOT CLARKE ERROR GRID
 plt, zone = clarke_error_grid(online_ts, online_ys, '')
-plt.title('CEG cluster2')
+plt.title('Pipeline 1, Ohio Dataset')
 plt.show()
 
-'''
-plt.figure(figsize=(6,6))
-plt.grid(True)
-plt.plot(np.array(sorted(online_ts))[20:-40],error_percent[20:-40],color='r',linewidth=0.8)
-plt.xlabel('BGL Refernce Value [mg/dL]')
-plt.ylabel('Prediction Error [%]')
-plt.show()'''
-
-'''
-fig, axes = plt.subplots(4, 3, figsize=(12, 8))
-for idx, client in enumerate(clients):
-    row = loc[idx][0]
-    col = loc[idx][1]
-    ax = axes[row, col]
-    ax.bar(['A','B','C','D','E'], zone[idx], color='green', edgecolor='black')
-    ax.set_xlabel('Zone')
-    ax.set_ylabel('%')
-    ax.set_title('Soggetto '+str(idx+1), fontsize = 8)
-if saves:
-    plt.savefig(os.path.join(results_folder, 'Error_Grid_Hist'))
-plt.title('CEG')
-plt.show()'''
+zone_percent = []
+for zona in zone:
+    zona = (zona*100)/sum(zone)
+    zone_percent.append(zona)
+df = pd.DataFrame(zone_percent)
+df.to_excel('CEG_prcent_cluster2.xlsx', index=False)
 
 plt.style.use('default')
 plt.figure(figsize=(6, 6))
@@ -404,7 +429,7 @@ plt.plot(metric_cluster1, color='red', label='test on test set', linewidth=0.6)
 plt.fill_between(range(N_rounds), np.array(metric_cluster1) - np.array(clients_metrics_std_cluster1), np.array(metric_cluster1) + np.array(clients_metrics_std_cluster1), color='red', alpha=0.2)
 plt.xlabel('Rounds')
 plt.ylabel('RMSE [mg/dL]')
-plt.title('Cluster1')
+plt.title('Pipeline 1, Ohio Dataset')
 plt.grid(True)
 plt.legend()
 plt.show()
@@ -415,18 +440,7 @@ plt.plot(metric_cluster2, color='red', label='test on test set', linewidth=0.6)
 plt.fill_between(range(N_rounds), np.array(metric_cluster2) - np.array(clients_metrics_std_cluster2), np.array(metric_cluster2) + np.array(clients_metrics_std_cluster2), color='red', alpha=0.2)
 plt.xlabel('Rounds')
 plt.ylabel('RMSE [mg/dL]')
-plt.title('Cluster2')
+plt.title('Pipeline 1, Ohio Dataset')
 plt.grid(True)
 plt.legend()
 plt.show()
-'''#PLOT DEI TEMPI DI ADDESTRAMENTO PER OGNI BATCH PER TUTTI I CLIENTS   
-plt.figure(figsize=(6,6))
-plt.plot(Batch_train_time,color='red', label='single batch',linewidth=0.8)
-plt.plot(np.mean(Batch_train_time)*np.ones((Batch_train_time.shape[0],1)),color='blue', label='average',linewidth=0.8)
-plt.xlabel('Rounds')
-plt.ylabel('time (s)')
-plt.title('Training time of all consecutive clients for single batch')
-plt.legend()
-if saves:
-    plt.savefig(os.path.join(results_folder, 'Train Time'))
-plt.show()'''

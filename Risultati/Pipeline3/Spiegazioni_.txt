@@ -1,2 +1,0 @@
-In questa pipeline sono presenti (nxnx3)-modelli, i modelli specializzati sono considerati un unico modello multiesperto perciò abbiamo (nxn) modelli
-I file xlsx sono risultanti dal test del modello (i,i) sui dati del paziente i, per i = {1,.....,12}

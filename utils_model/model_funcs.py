@@ -44,10 +44,6 @@ def geometric_median(X, eps=1e-6):
 def chunk_generator(X, y, n_hidden, chunk_size_0=1000, chunk_size=1, mode='basic', optional_next_dataset=None,Max=400,Min=50,mixed_difficult_percent=None):
     if mixed_difficult_percent == None:
         mixed_difficult_percent = 0.5
-    #Possible modes are:
-    # 'basic' --- all the chunks are of the same (chunk_size) size with no overlapping
-    # 'csfc'(cunstom size first chunk) --- the first chunk has a different size (chunk_size_0) from the others
-    # 'co'(chunks overlapped) --- the first chunks has custom size (chunk_size_0) and the other are overlapped on the first chunk
     N = len(y)
     if mode == 'basic':
         batches_x = [X[:n_hidden]] + [X[i:i+chunk_size] for i in np.arange(chunk_size, N, chunk_size)]
@@ -109,8 +105,6 @@ def chunk_generator(X, y, n_hidden, chunk_size_0=1000, chunk_size=1, mode='basic
         y_difficult = y[difficulty_measure == 1].reshape((X_difficult.shape[0],1))
         X_easy = X[difficulty_measure[:,0] != 1]
         y_easy = y[difficulty_measure != 1].reshape((X_easy.shape[0],1))
-        '''print('il numero di campioni difficili è: '+str(N_difficult))
-        print('il numero di campioni facili è: '+str(N_easy))'''
         batches_x = [X[:n_hidden]] + [X[i:i+chunk_size] for i in np.arange(chunk_size, N, chunk_size)]
         batches_y = [y[:n_hidden]] + [y[i:i+chunk_size] for i in np.arange(chunk_size, N, chunk_size)]
         N_tot = ((len(y_easy) + len(y_difficult))//2)//chunk_size
@@ -433,21 +427,16 @@ def mix_lists(lista_a, lista_b, percentuale_difficili, seed=None):
     if seed is not None:
         random.seed(seed)
     percentuale_facili = 1-percentuale_difficili
-    # Calcola il numero totale di elementi da includere nel mix
     totale_elementi = min(int(round(len(lista_a)*percentuale_difficili)), int(round(len(lista_b)*percentuale_facili)))
     
-    # Calcola quanti elementi prendere da ciascuna lista
     elementi_difficili = int(round(totale_elementi * percentuale_difficili))
     elementi_facili = int(round(totale_elementi * percentuale_facili))
     
-    # Ajuste se oltrepassiamo la dimensione delle liste
     elementi_difficili = min(elementi_difficili, len(lista_a))
     elementi_facili = min(elementi_facili, len(lista_b))
     
-    # Seleziona gli elementi da ciascuna lista
     mixato = lista_a[:elementi_difficili] + lista_b[:elementi_facili]
     
-    # Mischiare gli elementi nella lista mixata in modo casuale
     random.shuffle(mixato)
     
     return mixato

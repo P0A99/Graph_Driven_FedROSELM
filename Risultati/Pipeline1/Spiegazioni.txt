@@ -1,5 +1,0 @@
-Tutti.xlsx: è l'RMSE ottenuto testando sui dati di test di tutti i soggetti (prestazioni mediate tra i soggetti). Il test è eseguito consecutivamente prima con il modello globale cluster1 e poi con il modello globale cluster2.
-
-Cluster1.xlsx stessa cosa ma utilizzando solo il modello globale del cluster1 e testando solo sui dati dei soggetti del cluster1
-
-Cluster2.xlsx stessa cosa ma utilizzando solo il modello globale del cluster2 e testando solo sui dati dei soggetti del cluster2

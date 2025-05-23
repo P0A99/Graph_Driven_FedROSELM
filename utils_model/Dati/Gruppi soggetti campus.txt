@@ -1,6 +1,0 @@
-[ 0  1  1  0  0 -1 -1 -1  1  1  1  1  1  0  0  1  1  0  0  0]
-Silhouette Score: 0.9141696843375087 con k autovettori: 2
-[ 0  1  1  0  0 -1 -1 -1  1 -1  1  1  1  0  0  1 -1  0  0  0]
-Silhouette Score: 0.689756384462447 con k autovettori: 3
-[ 0  1  1  0  0 -1 -1 -1  1 -1  1  1  1  0  0  1 -1  0  0  0]
-Silhouette Score: 0.7568773798591331 con k autovettori: 4
