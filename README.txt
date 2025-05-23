@@ -7,7 +7,7 @@ Included Scripts:
 - Triple_R_Base.py (baseline framework without the patient graph / similarity matrix)
 
 Dataset Structure:
-To run any of the pipelines, place the OhioT1DM dataset inside the folder Dati/.
+To run any of the pipelines, place the OhioT1DM dataset inside the folder ohio_datasets/.
 The dataset must include two subfolders:
 - Train/    → containing XML files for training patients
 - Test/     → containing XML files for test patients
